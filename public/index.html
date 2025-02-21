@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mi Diario - Portada</title>
+  <style>
+    /* Tipografía Consolas en todo el sitio */
+    body {
+      font-family: Consolas, "Courier New", monospace;
+      margin-left: 1cm; /* margen para el texto */
+      background-color: #f5f5f5;
+      margin-top: 10px;
+    }
+    header {
+      margin-bottom: 10px;
+    }
+    .logo {
+      font-size: 2em;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    /* Últimas entradas */
+    .latest-entries a {
+      display: block;
+      color: #333;
+      text-decoration: none;
+      margin: 2px 0;
+    }
+    .textos-link {
+      margin: 10px 0;
+    }
+    .textos-link a {
+      text-decoration: none;
+      color: #333;
+      font-size: 1em;
+    }
+    /* Imagen destacada con margen izquierdo de 5cm */
+    .featured-image {
+      display: block;
+      width: 80%;
+      margin-left: 5cm;
+      margin-bottom: 20px;
+    }
+    /* Sección de buscador */
+    .search-section {
+      margin-bottom: 20px;
+    }
+    .search-section input[type="text"] {
+      width: 60%;
+      padding: 6px;
+      font-size: 1em;
+    }
+    .search-section button {
+      padding: 6px 10px;
+      font-size: 1em;
+      margin-left: 5px;
+      cursor: pointer;
+    }
+    /* Botón de contacto */
+    .contact-button button {
+      padding: 8px 15px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    /* Modal de contacto (por defecto oculto) */
+    #contact-modal {
+      display: none;
+      position: fixed;
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 9999;
+    }
+    .modal-content {
+      background: #fff;
+      width: 400px;
+      margin: 10% auto; /* centrado vertical y horizontal */
+      padding: 20px;
+      border-radius: 5px;
+    }
+    .modal-content h2 {
+      margin-top: 0;
+    }
+    .modal-content input,
+    .modal-content textarea {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
+      font-family: inherit;
+    }
+    .modal-content button {
+      padding: 8px 12px;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <!-- Logo A -->
+    <div class="logo">A</div>
+    <!-- Últimas entradas -->
+    <nav class="latest-entries" id="latest-entries-nav">
+      <!-- Se rellenan con JavaScript al cargar -->
+    </nav>
+    <!-- Enlace a "Textos" -->
+    <div class="textos-link">
+      <a href="textos.html">Textos</a>
+    </div>
+  </header>
+  
+  <!-- Imagen destacada -->
+  <img class="featured-image" src="uploads/foto.jpg" alt="Foto Destacada">
+  
+  <!-- Buscador -->
+  <div class="search-section">
+    <input type="text" id="search-input" placeholder="Buscar palabras clave...">
+    <button id="search-button">Buscar</button>
+  </div>
+  
+  <!-- Botón para abrir el modal de contacto -->
+  <div class="contact-button">
+    <button id="contact-btn">Contacto</button>
+  </div>
+  
+  <!-- Modal de contacto (oculto por defecto) -->
+  <div id="contact-modal">
+    <div class="modal-content">
+      <h2>Contacto</h2>
+      <!-- Formspree: cambia "mrbejvek" si tu URL es distinta -->
+      <form action="https://formspree.io/f/mrbejvek" method="POST">
+        <label>Nombre</label>
+        <input type="text" name="name" placeholder="Tu nombre" required>
+        
+        <label>Mensaje</label>
+        <textarea name="message" rows="4" placeholder="Tu mensaje" required></textarea>
+        
+        <!-- (Opcional) Para que puedas responder por email
+        <label>Email</label>
+        <input type="email" name="_replyto" placeholder="Tu email" />
+        -->
+        
+        <!-- (Opcional) reCAPTCHA v2
+        <div class="g-recaptcha" data-sitekey="TU_SITE_KEY"></div>
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+        -->
+        
+        <button type="submit">Enviar</button>
+        <button type="button" id="close-contact">Cerrar</button>
+      </form>
+    </div>
+  </div>
+  
+  <script>
+    // 1) Cargar las 5 últimas entradas
+    fetch("http://localhost:3000/entradas")
+      .then(res => res.json())
+      .then(data => {
+        const nav = document.getElementById("latest-entries-nav");
+        nav.innerHTML = "";
+        if (data.length === 0) {
+          nav.textContent = "No hay entradas recientes.";
+        } else {
+          data.forEach(entry => {
+            const link = document.createElement("a");
+            link.href = `entrada.html?id=${entry.id}`;
+            link.textContent = entry.titulo;
+            nav.appendChild(link);
+          });
+        }
+      })
+      .catch(err => console.error("Error cargando las últimas entradas:", err));
+    
+    // 2) Buscador: redirige a busqueda.html con la query
+    document.getElementById('search-button').addEventListener('click', function(){
+      const query = document.getElementById('search-input').value.trim();
+      if(query) {
+        window.location.href = `busqueda.html?q=${encodeURIComponent(query)}`;
+      }
+    });
+    
+    // 3) Mostrar/ocultar el modal de contacto
+    const contactBtn = document.getElementById('contact-btn');
+    const contactModal = document.getElementById('contact-modal');
+    const closeContact = document.getElementById('close-contact');
+    
+    contactBtn.addEventListener('click', function(){
+      contactModal.style.display = 'block';
+    });
+    closeContact.addEventListener('click', function(){
+      contactModal.style.display = 'none';
+    });
+  </script>
+</body>
+</html>

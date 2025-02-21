@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Listado de Textos - Mi Diario</title>
+  <style>
+    body {
+      font-family: Consolas, "Courier New", monospace;
+      margin: 10px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      margin: 5px 0;
+    }
+    .navigation {
+      margin-top: 20px;
+    }
+    .navigation a {
+      margin-right: 10px;
+      text-decoration: none;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>Listado de Textos</h1>
+  <ul id="entry-list"></ul>
+  <div class="navigation">
+    <a href="#" id="prev-page" style="display:none;">&lt;&lt;</a>
+    <a href="index.html">Portada</a>
+    <a href="#" id="next-page" style="display:none;">&gt;&gt;</a>
+  </div>
+
+  <script>
+    let currentPage = 1;
+    const pageSize = 25;
+    let allEntries = [];
+
+    function loadEntries() {
+      fetch("http://localhost:3000/todas")
+        .then(res => res.json())
+        .then(data => {
+          allEntries = data;
+          displayPage(currentPage);
+        })
+        .catch(err => console.error("Error:", err));
+    }
+
+    function displayPage(page) {
+      const start = (page - 1) * pageSize;
+      const end = start + pageSize;
+      const list = document.getElementById("entry-list");
+      list.innerHTML = "";
+
+      const pageEntries = allEntries.slice(start, end);
+      pageEntries.forEach(entry => {
+        const li = document.createElement("li");
+        li.innerHTML = `<a href="entrada.html?id=${entry.id}">${entry.titulo}</a>`;
+        list.appendChild(li);
+      });
+
+      // Mostrar/ocultar botones
+      document.getElementById("prev-page").style.display = (page > 1) ? "inline" : "none";
+      document.getElementById("next-page").style.display = (end < allEntries.length) ? "inline" : "none";
+    }
+
+    document.getElementById("prev-page").addEventListener("click", e => {
+      e.preventDefault();
+      if (currentPage > 1) {
+        currentPage--;
+        displayPage(currentPage);
+      }
+    });
+
+    document.getElementById("next-page").addEventListener("click", e => {
+      e.preventDefault();
+      if (currentPage * pageSize < allEntries.length) {
+        currentPage++;
+        displayPage(currentPage);
+      }
+    });
+
+    loadEntries();
+  </script>
+</body>
+</html>
