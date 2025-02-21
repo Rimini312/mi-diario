@@ -3,25 +3,27 @@ import tkinter as tk
 from tkinter import messagebox, filedialog
 import time
 
-# Rutas base (ajusta "tu-backend.onrender.com" a tu URL real)
+# Rutas base
+# Asegúrate de usar tu dominio de Render, por ejemplo, "https://mi-diario.onrender.com"
 BASE_URL_PUBLIC = "https://mi-diario.onrender.com"
 BASE_URL_ADMIN  = "https://mi-diario.onrender.com/admin"
+
+# Clave de administrador, definida en Render como ADMIN_KEY
 ADMIN_KEY = "Grabador5_"
 
-
-# Lista global de entradas
+# Lista global para almacenar las entradas cargadas
 entries_list = []
 selected_id = None
 
 ########################
-# Funciones de Entradas
+# Funciones de lectura (rutas públicas)
 ########################
 
 def load_entries():
     """Carga todas las entradas desde el endpoint público /todas."""
     global entries_list, selected_id
     try:
-        # Llamamos a la ruta pública /todas, sin /admin
+        # Llamamos a la ruta pública /todas (SIN /admin)
         res = requests.get(f"{BASE_URL_PUBLIC}/todas", params={"_": str(time.time())})
     except Exception as e:
         messagebox.showerror("Error", f"Error al cargar entradas: {e}")
@@ -44,11 +46,16 @@ def load_entries():
     for entry in entries_list:
         listbox.insert(tk.END, f"[{entry['id']}] {entry['titulo']}")
 
+    # Reiniciamos el estado de edición
     selected_id = None
     edit_title_entry.delete(0, tk.END)
     edit_content_text.config(state=tk.NORMAL)
     edit_content_text.delete("1.0", tk.END)
     edit_content_text.config(state=tk.DISABLED)
+
+########################
+# Funciones de administración (rutas con /admin)
+########################
 
 def add_entry():
     """Agrega una nueva entrada (endpoint de admin: /admin/nueva)."""
@@ -59,10 +66,11 @@ def add_entry():
         return
 
     try:
-        # Para crear, usamos la ruta de administración
-        res = requests.post(f"{BASE_URL_ADMIN}/nueva",
-                            json={"titulo": titulo, "contenido": contenido},
-                            headers={"x-admin-key": ADMIN_KEY})
+        res = requests.post(
+            f"{BASE_URL_ADMIN}/nueva",
+            json={"titulo": titulo, "contenido": contenido},
+            headers={"x-admin-key": ADMIN_KEY}
+        )
     except Exception as e:
         messagebox.showerror("Error", f"Error agregando entrada: {e}")
         return
@@ -71,7 +79,7 @@ def add_entry():
         messagebox.showinfo("Éxito", "Entrada agregada con éxito.")
         new_title_entry.delete(0, tk.END)
         new_content_text.delete("1.0", tk.END)
-        load_entries()  # recargar la lista
+        load_entries()  # recarga la lista
     else:
         try:
             error_details = res.json()
@@ -106,9 +114,11 @@ def update_entry():
         return
 
     try:
-        res = requests.put(f"{BASE_URL_ADMIN}/modificar/{selected_id}",
-                           json={"titulo": new_title, "contenido": new_content},
-                           headers={"x-admin-key": ADMIN_KEY})
+        res = requests.put(
+            f"{BASE_URL_ADMIN}/modificar/{selected_id}",
+            json={"titulo": new_title, "contenido": new_content},
+            headers={"x-admin-key": ADMIN_KEY}
+        )
     except Exception as e:
         messagebox.showerror("Error", f"Error actualizando entrada: {e}")
         return
@@ -130,8 +140,10 @@ def delete_entry():
         return
 
     try:
-        res = requests.delete(f"{BASE_URL_ADMIN}/borrar/{selected_id}",
-                              headers={"x-admin-key": ADMIN_KEY})
+        res = requests.delete(
+            f"{BASE_URL_ADMIN}/borrar/{selected_id}",
+            headers={"x-admin-key": ADMIN_KEY}
+        )
     except Exception as e:
         messagebox.showerror("Error", f"Error eliminando entrada: {e}")
         return
@@ -154,9 +166,11 @@ def upload_photo():
 
     try:
         with open(file_path, "rb") as file:
-            res = requests.post(f"{BASE_URL_ADMIN}/subir-foto",
-                                files={"foto": file},
-                                headers={"x-admin-key": ADMIN_KEY})
+            res = requests.post(
+                f"{BASE_URL_ADMIN}/subir-foto",
+                files={"foto": file},
+                headers={"x-admin-key": ADMIN_KEY}
+            )
     except Exception as e:
         messagebox.showerror("Error", f"Error subiendo foto: {e}")
         return
