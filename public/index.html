@@ -94,28 +94,23 @@
 </head>
 <body>
   <header>
-    <!-- Logo "A" -->
     <div class="logo">A</div>
-    <!-- Últimas 5 entradas -->
     <nav class="latest-entries" id="latest-entries-nav">
-      <!-- Se rellenará con JavaScript -->
+      <!-- Se rellenarán con JavaScript -->
     </nav>
-    <!-- Enlace a "Textos" -->
     <div class="textos-link">
       <a href="textos.html">Textos</a>
     </div>
   </header>
   
-  <!-- Imagen destacada -->
-  <img class="featured-image" src="uploads/foto.jpg" alt="Foto Destacada">
+  <!-- Imagen destacada con URL absoluta al backend -->
+  <img class="featured-image" src="https://mi-diario-backend.onrender.com/uploads/foto.jpg" alt="Foto Destacada">
   
-  <!-- Buscador -->
   <div class="search-section">
     <input type="text" id="search-input" placeholder="Buscar palabras clave...">
     <button id="search-button">Buscar</button>
   </div>
   
-  <!-- Botón de contacto -->
   <div class="contact-button">
     <button id="contact-btn">Contacto</button>
   </div>
@@ -131,7 +126,7 @@
         <input type="email" name="_replyto" placeholder="Tu email">
         <label>Mensaje</label>
         <textarea name="message" rows="4" placeholder="Tu mensaje" required></textarea>
-        <!-- Integración de reCAPTCHA: Reemplaza TU_SITE_KEY con tu clave -->
+        <!-- reCAPTCHA: Reemplaza TU_SITE_KEY con tu clave real -->
         <div class="g-recaptcha" data-sitekey="TU_SITE_KEY"></div>
         <script src="https://www.google.com/recaptcha/api.js" async defer></script>
         <button type="submit">Enviar</button>
@@ -141,7 +136,7 @@
   </div>
   
   <script>
-    // Cargar las últimas 5 entradas desde el backend en Render
+    // Cargar las últimas 5 entradas
     fetch("https://mi-diario-backend.onrender.com/entradas")
       .then(res => res.json())
       .then(data => {
@@ -160,7 +155,7 @@
       })
       .catch(err => console.error("Error al cargar entradas:", err));
     
-    // Función del buscador
+    // Buscador
     document.getElementById('search-button').addEventListener('click', function(){
       const query = document.getElementById('search-input').value.trim();
       if(query) {

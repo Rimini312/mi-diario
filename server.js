@@ -7,9 +7,10 @@ const { Pool } = require("pg");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
-const ADMIN_KEY = process.env.ADMIN_KEY || "tu_clave_secreta";
 
-// Middlewares
+// Usa la variable de entorno, sin fallback para evitar confusiones
+const ADMIN_KEY = process.env.ADMIN_KEY;
+
 app.use(cors());
 app.use(express.json());
 
@@ -17,30 +18,26 @@ app.use(express.json());
 const storage = multer.diskStorage({
   destination: "uploads/",
   filename: (req, file, cb) => {
-    cb(null, "foto.jpg"); // Siempre se sobrescribe la misma foto
+    cb(null, "foto.jpg"); // Siempre se sobrescribe la foto
   },
 });
 const upload = multer({ storage });
 
-// Servir archivos estáticos de la carpeta "uploads"
+// Servir archivos estáticos (imágenes)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// (Opcional) RUTA RAÍZ para ver que la API funciona
+app.get("/", (req, res) => {
+  res.send("Bienvenido a la API de Mi Diario");
+});
+
 // Conexión a Postgres (Supabase)
-// Asegúrate de definir la variable de entorno SUPABASE_CONNECTION_STRING en Render
 const pool = new Pool({
   connectionString: process.env.SUPABASE_CONNECTION_STRING,
   ssl: { rejectUnauthorized: false },
 });
 
-// Middleware para rutas de administración (requiere que el header x-admin-key coincida)
-app.use("/admin", (req, res, next) => {
-  if (req.headers["x-admin-key"] !== ADMIN_KEY) {
-    return res.status(403).json({ error: "Acceso denegado" });
-  }
-  next();
-});
-
-// Endpoint: Obtener las últimas 5 entradas
+// Rutas públicas
 app.get("/entradas", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM entradas ORDER BY fecha DESC LIMIT 5");
@@ -50,7 +47,6 @@ app.get("/entradas", async (req, res) => {
   }
 });
 
-// Endpoint: Obtener todas las entradas
 app.get("/todas", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM entradas ORDER BY fecha DESC");
@@ -60,7 +56,6 @@ app.get("/todas", async (req, res) => {
   }
 });
 
-// Endpoint: Buscar entradas por palabra clave (usa ILIKE para búsqueda sin distinción de mayúsculas)
 app.get("/buscar", async (req, res) => {
   const palabra = req.query.q;
   try {
@@ -74,7 +69,14 @@ app.get("/buscar", async (req, res) => {
   }
 });
 
-// Endpoint: Agregar una nueva entrada
+// Rutas de administración (todas empiezan con /admin)
+app.use("/admin", (req, res, next) => {
+  if (req.headers["x-admin-key"] !== ADMIN_KEY) {
+    return res.status(403).json({ error: "Acceso denegado" });
+  }
+  next();
+});
+
 app.post("/admin/nueva", async (req, res) => {
   const { titulo, contenido } = req.body;
   if (!titulo || !contenido) {
@@ -91,7 +93,6 @@ app.post("/admin/nueva", async (req, res) => {
   }
 });
 
-// Endpoint: Eliminar una entrada
 app.delete("/admin/borrar/:id", async (req, res) => {
   const { id } = req.params;
   try {
@@ -102,7 +103,6 @@ app.delete("/admin/borrar/:id", async (req, res) => {
   }
 });
 
-// Endpoint: Modificar una entrada
 app.put("/admin/modificar/:id", async (req, res) => {
   const { id } = req.params;
   const { titulo, contenido } = req.body;
@@ -117,12 +117,10 @@ app.put("/admin/modificar/:id", async (req, res) => {
   }
 });
 
-// Endpoint: Subir foto (administración)
 app.post("/admin/subir-foto", upload.single("foto"), (req, res) => {
   res.json({ mensaje: "Foto subida con éxito", url: "/uploads/foto.jpg" });
 });
 
-// Iniciar el servidor
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
   console.log("Base de datos conectada");
