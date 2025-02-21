@@ -4,12 +4,11 @@
   <meta charset="UTF-8">
   <title>Mi Diario - Portada</title>
   <style>
-    /* Tipografía Consolas en todo el sitio */
     body {
       font-family: Consolas, "Courier New", monospace;
-      margin-left: 1cm; /* margen para el texto */
-      background-color: #f5f5f5;
+      margin-left: 1cm;
       margin-top: 10px;
+      background-color: #f5f5f5;
     }
     header {
       margin-bottom: 10px;
@@ -19,7 +18,6 @@
       font-weight: bold;
       margin-bottom: 5px;
     }
-    /* Últimas entradas */
     .latest-entries a {
       display: block;
       color: #333;
@@ -34,14 +32,12 @@
       color: #333;
       font-size: 1em;
     }
-    /* Imagen destacada con margen izquierdo de 5cm */
     .featured-image {
       display: block;
       width: 80%;
       margin-left: 5cm;
       margin-bottom: 20px;
     }
-    /* Sección de buscador */
     .search-section {
       margin-bottom: 20px;
     }
@@ -56,19 +52,18 @@
       margin-left: 5px;
       cursor: pointer;
     }
-    /* Botón de contacto */
     .contact-button button {
       padding: 8px 15px;
       font-size: 1em;
       cursor: pointer;
     }
-    /* Modal de contacto (por defecto oculto) */
+    /* Modal de contacto */
     #contact-modal {
       display: none;
       position: fixed;
-      top: 0; 
-      left: 0; 
-      width: 100%; 
+      top: 0;
+      left: 0;
+      width: 100%;
       height: 100%;
       background: rgba(0,0,0,0.5);
       z-index: 9999;
@@ -76,7 +71,7 @@
     .modal-content {
       background: #fff;
       width: 400px;
-      margin: 10% auto; /* centrado vertical y horizontal */
+      margin: 10% auto;
       padding: 20px;
       border-radius: 5px;
     }
@@ -99,11 +94,11 @@
 </head>
 <body>
   <header>
-    <!-- Logo A -->
+    <!-- Logo "A" -->
     <div class="logo">A</div>
-    <!-- Últimas entradas -->
+    <!-- Últimas 5 entradas -->
     <nav class="latest-entries" id="latest-entries-nav">
-      <!-- Se rellenan con JavaScript al cargar -->
+      <!-- Se rellenará con JavaScript -->
     </nav>
     <!-- Enlace a "Textos" -->
     <div class="textos-link">
@@ -120,33 +115,25 @@
     <button id="search-button">Buscar</button>
   </div>
   
-  <!-- Botón para abrir el modal de contacto -->
+  <!-- Botón de contacto -->
   <div class="contact-button">
     <button id="contact-btn">Contacto</button>
   </div>
   
-  <!-- Modal de contacto (oculto por defecto) -->
+  <!-- Modal de contacto -->
   <div id="contact-modal">
     <div class="modal-content">
       <h2>Contacto</h2>
-      <!-- Formspree: cambia "mrbejvek" si tu URL es distinta -->
       <form action="https://formspree.io/f/mrbejvek" method="POST">
         <label>Nombre</label>
         <input type="text" name="name" placeholder="Tu nombre" required>
-        
+        <label>Email (opcional)</label>
+        <input type="email" name="_replyto" placeholder="Tu email">
         <label>Mensaje</label>
         <textarea name="message" rows="4" placeholder="Tu mensaje" required></textarea>
-        
-        <!-- (Opcional) Para que puedas responder por email
-        <label>Email</label>
-        <input type="email" name="_replyto" placeholder="Tu email" />
-        -->
-        
-        <!-- (Opcional) reCAPTCHA v2
+        <!-- Integración de reCAPTCHA: Reemplaza TU_SITE_KEY con tu clave -->
         <div class="g-recaptcha" data-sitekey="TU_SITE_KEY"></div>
         <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-        -->
-        
         <button type="submit">Enviar</button>
         <button type="button" id="close-contact">Cerrar</button>
       </form>
@@ -154,8 +141,8 @@
   </div>
   
   <script>
-    // 1) Cargar las 5 últimas entradas
-    fetch("http://localhost:3000/entradas")
+    // Cargar las últimas 5 entradas desde el backend en Render
+    fetch("https://mi-diario-backend.onrender.com/entradas")
       .then(res => res.json())
       .then(data => {
         const nav = document.getElementById("latest-entries-nav");
@@ -171,9 +158,9 @@
           });
         }
       })
-      .catch(err => console.error("Error cargando las últimas entradas:", err));
+      .catch(err => console.error("Error al cargar entradas:", err));
     
-    // 2) Buscador: redirige a busqueda.html con la query
+    // Función del buscador
     document.getElementById('search-button').addEventListener('click', function(){
       const query = document.getElementById('search-input').value.trim();
       if(query) {
@@ -181,7 +168,7 @@
       }
     });
     
-    // 3) Mostrar/ocultar el modal de contacto
+    // Modal de contacto
     const contactBtn = document.getElementById('contact-btn');
     const contactModal = document.getElementById('contact-modal');
     const closeContact = document.getElementById('close-contact');

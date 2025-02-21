@@ -21,73 +21,74 @@
     }
     .navigation {
       margin-top: 20px;
+      text-align: center;
     }
     .navigation a {
-      margin-right: 10px;
+      margin: 0 10px;
       text-decoration: none;
       color: #333;
     }
   </style>
-</head>
-<body>
-  <h1>Listado de Textos</h1>
-  <ul id="entry-list"></ul>
-  <div class="navigation">
-    <a href="#" id="prev-page" style="display:none;">&lt;&lt;</a>
-    <a href="index.html">Portada</a>
-    <a href="#" id="next-page" style="display:none;">&gt;&gt;</a>
-  </div>
-
   <script>
     let currentPage = 1;
     const pageSize = 25;
     let allEntries = [];
-
-    function loadEntries() {
-      fetch("http://localhost:3000/todas")
+    
+    function loadEntries(){
+      fetch("https://mi-diario-backend.onrender.com/todas")
         .then(res => res.json())
         .then(data => {
           allEntries = data;
           displayPage(currentPage);
         })
-        .catch(err => console.error("Error:", err));
+        .catch(err => console.error("Error al cargar entradas:", err));
     }
-
-    function displayPage(page) {
+    
+    function displayPage(page){
       const start = (page - 1) * pageSize;
       const end = start + pageSize;
       const list = document.getElementById("entry-list");
       list.innerHTML = "";
-
       const pageEntries = allEntries.slice(start, end);
-      pageEntries.forEach(entry => {
-        const li = document.createElement("li");
-        li.innerHTML = `<a href="entrada.html?id=${entry.id}">${entry.titulo}</a>`;
-        list.appendChild(li);
-      });
-
-      // Mostrar/ocultar botones
-      document.getElementById("prev-page").style.display = (page > 1) ? "inline" : "none";
-      document.getElementById("next-page").style.display = (end < allEntries.length) ? "inline" : "none";
-    }
-
-    document.getElementById("prev-page").addEventListener("click", e => {
-      e.preventDefault();
-      if (currentPage > 1) {
-        currentPage--;
-        displayPage(currentPage);
+      if(pageEntries.length === 0){
+        list.innerHTML = "<li>No hay entradas para mostrar.</li>";
+      } else {
+        pageEntries.forEach(entry => {
+          const li = document.createElement("li");
+          li.innerHTML = `<a href="entrada.html?id=${entry.id}">${entry.titulo}</a>`;
+          list.appendChild(li);
+        });
       }
-    });
-
-    document.getElementById("next-page").addEventListener("click", e => {
-      e.preventDefault();
-      if (currentPage * pageSize < allEntries.length) {
+      document.getElementById("current-page").textContent = page;
+    }
+    
+    function nextPage(){
+      if(currentPage * pageSize < allEntries.length){
         currentPage++;
         displayPage(currentPage);
       }
-    });
-
-    loadEntries();
+    }
+    
+    function prevPage(){
+      if(currentPage > 1){
+        currentPage--;
+        displayPage(currentPage);
+      }
+    }
+    
+    window.onload = loadEntries;
   </script>
+</head>
+<body>
+  <h1>Listado de Textos</h1>
+  <ul id="entry-list"></ul>
+  <div class="navigation">
+    <a href="#" id="prev-page" style="display:none;" onclick="prevPage(); return false;">&lt;&lt;</a>
+    Página <span id="current-page">1</span>
+    <a href="#" id="next-page" style="display:none;" onclick="nextPage(); return false;">&gt;&gt;</a>
+  </div>
+  <div class="navigation">
+    <a href="index.html">Portada</a>
+  </div>
 </body>
 </html>

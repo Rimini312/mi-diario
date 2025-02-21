@@ -1,134 +1,129 @@
 // server.js
-const express = require('express');
-const app = express();
-const path = require('path');
-const sqlite3 = require('sqlite3').verbose();
-const cors = require('cors');
-const multer = require('multer');
+const express = require("express");
+const cors = require("cors");
+const multer = require("multer");
+const path = require("path");
+const { Pool } = require("pg");
 
-// SERVIR ARCHIVOS ESTÁTICOS:
-// Los archivos de tu sitio (HTML, CSS, JS) se ubicarán en la carpeta "public".
-app.use(express.static(path.join(__dirname, 'public')));
+const app = express();
+const PORT = process.env.PORT || 10000;
+const ADMIN_KEY = process.env.ADMIN_KEY || "tu_clave_secreta";
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Clave secreta para rutas de administración
-const ADMIN_KEY = "tu_clave_secreta";
-
-// Configuración de Multer para subir imágenes
+// Configuración de multer para subir imágenes
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
+  destination: "uploads/",
   filename: (req, file, cb) => {
     cb(null, "foto.jpg"); // Siempre se sobrescribe la misma foto
-  }
+  },
 });
 const upload = multer({ storage });
 
-// Servir la carpeta de imágenes "uploads"
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Servir archivos estáticos de la carpeta "uploads"
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Conexión a SQLite y creación de la tabla si no existe
-const db = new sqlite3.Database("./diario.db", (err) => {
-  if (err) {
-    console.error("Error al conectar con la base de datos:", err.message);
-  } else {
-    console.log("Base de datos conectada");
-  }
+// Conexión a Postgres (Supabase)
+// Asegúrate de definir la variable de entorno SUPABASE_CONNECTION_STRING en Render
+const pool = new Pool({
+  connectionString: process.env.SUPABASE_CONNECTION_STRING,
+  ssl: { rejectUnauthorized: false },
 });
 
-db.run(
-  `CREATE TABLE IF NOT EXISTS entradas (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    titulo TEXT NOT NULL,
-    contenido TEXT NOT NULL,
-    fecha TEXT DEFAULT CURRENT_TIMESTAMP
-  )`
-);
-
-// Endpoints públicos
-// Obtener las últimas 5 entradas
-app.get('/entradas', (req, res) => {
-  db.all("SELECT * FROM entradas ORDER BY fecha DESC LIMIT 5", [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
-  });
-});
-
-// Obtener todas las entradas
-app.get('/todas', (req, res) => {
-  db.all("SELECT * FROM entradas ORDER BY fecha DESC", [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
-  });
-});
-
-// Buscar entradas por palabra clave
-app.get('/buscar', (req, res) => {
-  const palabra = req.query.q;
-  db.all(
-    "SELECT * FROM entradas WHERE contenido LIKE ? ORDER BY fecha DESC",
-    [`%${palabra}%`],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json(rows);
-    }
-  );
-});
-
-// Middleware para las rutas de administración
-app.use('/admin', (req, res, next) => {
+// Middleware para rutas de administración (requiere que el header x-admin-key coincida)
+app.use("/admin", (req, res, next) => {
   if (req.headers["x-admin-key"] !== ADMIN_KEY) {
     return res.status(403).json({ error: "Acceso denegado" });
   }
   next();
 });
 
-// Rutas de administración
-// Agregar una nueva entrada
-app.post('/admin/nueva', (req, res) => {
+// Endpoint: Obtener las últimas 5 entradas
+app.get("/entradas", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM entradas ORDER BY fecha DESC LIMIT 5");
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Endpoint: Obtener todas las entradas
+app.get("/todas", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM entradas ORDER BY fecha DESC");
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Endpoint: Buscar entradas por palabra clave (usa ILIKE para búsqueda sin distinción de mayúsculas)
+app.get("/buscar", async (req, res) => {
+  const palabra = req.query.q;
+  try {
+    const result = await pool.query(
+      "SELECT * FROM entradas WHERE contenido ILIKE $1 ORDER BY fecha DESC",
+      [`%${palabra}%`]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Endpoint: Agregar una nueva entrada
+app.post("/admin/nueva", async (req, res) => {
   const { titulo, contenido } = req.body;
   if (!titulo || !contenido) {
     return res.status(400).json({ error: "Título y contenido son requeridos" });
   }
-  db.run("INSERT INTO entradas (titulo, contenido) VALUES (?, ?)", [titulo, contenido], function (err) {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ id: this.lastID, titulo, contenido });
-  });
+  try {
+    const result = await pool.query(
+      "INSERT INTO entradas (titulo, contenido) VALUES ($1, $2) RETURNING id, titulo, contenido",
+      [titulo, contenido]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Eliminar una entrada
-app.delete('/admin/borrar/:id', (req, res) => {
-  const id = req.params.id;
-  db.run("DELETE FROM entradas WHERE id = ?", [id], function (err) {
-    if (err) return res.status(500).json({ error: err.message });
+// Endpoint: Eliminar una entrada
+app.delete("/admin/borrar/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query("DELETE FROM entradas WHERE id = $1", [id]);
     res.json({ mensaje: "Entrada eliminada" });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Modificar una entrada
-app.put('/admin/modificar/:id', (req, res) => {
+// Endpoint: Modificar una entrada
+app.put("/admin/modificar/:id", async (req, res) => {
+  const { id } = req.params;
   const { titulo, contenido } = req.body;
-  const id = req.params.id;
   if (!titulo || !contenido) {
     return res.status(400).json({ error: "Título y contenido son requeridos" });
   }
-  db.run("UPDATE entradas SET titulo = ?, contenido = ? WHERE id = ?", [titulo, contenido, id], function (err) {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    await pool.query("UPDATE entradas SET titulo = $1, contenido = $2 WHERE id = $3", [titulo, contenido, id]);
     res.json({ mensaje: "Entrada modificada" });
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Subir foto (administración)
-app.post('/admin/subir-foto', upload.single("foto"), (req, res) => {
+// Endpoint: Subir foto (administración)
+app.post("/admin/subir-foto", upload.single("foto"), (req, res) => {
   res.json({ mensaje: "Foto subida con éxito", url: "/uploads/foto.jpg" });
 });
 
 // Iniciar el servidor
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  console.log("Base de datos conectada");
 });
