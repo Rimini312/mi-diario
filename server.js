@@ -8,9 +8,10 @@ const { Pool } = require("pg");
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Usa la variable de entorno, sin fallback para evitar confusiones
+// Lee la clave de administrador desde las variables de entorno (sin fallback)
 const ADMIN_KEY = process.env.ADMIN_KEY;
 
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
@@ -18,20 +19,20 @@ app.use(express.json());
 const storage = multer.diskStorage({
   destination: "uploads/",
   filename: (req, file, cb) => {
-    cb(null, "foto.jpg"); // Siempre se sobrescribe la foto
+    cb(null, "foto.jpg"); // Se sobrescribe la misma foto
   },
 });
 const upload = multer({ storage });
 
-// Servir archivos estáticos (imágenes)
+// Servir archivos estáticos de la carpeta "uploads"
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// (Opcional) RUTA RAÍZ para ver que la API funciona
-app.get("/", (req, res) => {
-  res.send("Bienvenido a la API de Mi Diario");
+// Ruta de prueba para confirmar que el servidor responde
+app.get("/test", (req, res) => {
+  res.send("Test OK");
 });
 
-// Conexión a Postgres (Supabase)
+// Conexión a PostgreSQL (Supabase)
 const pool = new Pool({
   connectionString: process.env.SUPABASE_CONNECTION_STRING,
   ssl: { rejectUnauthorized: false },
@@ -69,14 +70,17 @@ app.get("/buscar", async (req, res) => {
   }
 });
 
-// Rutas de administración (todas empiezan con /admin)
+// Middleware para rutas de administración
 app.use("/admin", (req, res, next) => {
+  // Muestra en los logs la clave recibida para depuración (puedes comentar en producción)
+  console.log("x-admin-key recibida:", req.headers["x-admin-key"]);
   if (req.headers["x-admin-key"] !== ADMIN_KEY) {
     return res.status(403).json({ error: "Acceso denegado" });
   }
   next();
 });
 
+// Rutas de administración
 app.post("/admin/nueva", async (req, res) => {
   const { titulo, contenido } = req.body;
   if (!titulo || !contenido) {
@@ -121,6 +125,7 @@ app.post("/admin/subir-foto", upload.single("foto"), (req, res) => {
   res.json({ mensaje: "Foto subida con éxito", url: "/uploads/foto.jpg" });
 });
 
+// Iniciar el servidor
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
   console.log("Base de datos conectada");
