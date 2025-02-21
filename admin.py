@@ -3,27 +3,19 @@ import tkinter as tk
 from tkinter import messagebox, filedialog
 import time
 
-# Rutas base
-# Asegúrate de usar tu dominio de Render, por ejemplo, "https://mi-diario.onrender.com"
+# Rutas base para el backend
 BASE_URL_PUBLIC = "https://mi-diario.onrender.com"
 BASE_URL_ADMIN  = "https://mi-diario.onrender.com/admin"
 
-# Clave de administrador, definida en Render como ADMIN_KEY
+# Clave de administrador
 ADMIN_KEY = "Grabador5_"
 
-# Lista global para almacenar las entradas cargadas
 entries_list = []
 selected_id = None
 
-########################
-# Funciones de lectura (rutas públicas)
-########################
-
 def load_entries():
-    """Carga todas las entradas desde el endpoint público /todas."""
     global entries_list, selected_id
     try:
-        # Llamamos a la ruta pública /todas (SIN /admin)
         res = requests.get(f"{BASE_URL_PUBLIC}/todas", params={"_": str(time.time())})
     except Exception as e:
         messagebox.showerror("Error", f"Error al cargar entradas: {e}")
@@ -39,26 +31,16 @@ def load_entries():
         messagebox.showerror("Error", f"Error al decodificar la lista de entradas: {e}")
         return
 
-    # Limpiamos la lista visual (listbox)
     listbox.delete(0, tk.END)
-
-    # Rellenamos la lista con las entradas
     for entry in entries_list:
         listbox.insert(tk.END, f"[{entry['id']}] {entry['titulo']}")
-
-    # Reiniciamos el estado de edición
     selected_id = None
     edit_title_entry.delete(0, tk.END)
     edit_content_text.config(state=tk.NORMAL)
     edit_content_text.delete("1.0", tk.END)
     edit_content_text.config(state=tk.DISABLED)
 
-########################
-# Funciones de administración (rutas con /admin)
-########################
-
 def add_entry():
-    """Agrega una nueva entrada (endpoint de admin: /admin/nueva)."""
     titulo = new_title_entry.get()
     contenido = new_content_text.get("1.0", tk.END).strip()
     if not titulo or not contenido:
@@ -79,7 +61,7 @@ def add_entry():
         messagebox.showinfo("Éxito", "Entrada agregada con éxito.")
         new_title_entry.delete(0, tk.END)
         new_content_text.delete("1.0", tk.END)
-        load_entries()  # recarga la lista
+        load_entries()
     else:
         try:
             error_details = res.json()
@@ -88,14 +70,20 @@ def add_entry():
         messagebox.showerror("Error", f"No se pudo agregar la entrada.\n{error_details}")
 
 def on_select(event):
-    """Se dispara al seleccionar una entrada en la lista."""
     global selected_id
     if not listbox.curselection():
         return
     index = listbox.curselection()[0]
     entry = entries_list[index]
+    
+    # Verificar si ya hay cambios en la sección de edición
+    current_text = edit_content_text.get("1.0", tk.END).strip()
+    if current_text and current_text != entry['contenido']:
+        sobrescribir = messagebox.askyesno("Confirmar", "Hay cambios sin guardar. ¿Deseas sobrescribirlos con la entrada seleccionada?")
+        if not sobrescribir:
+            return
+    
     selected_id = entry['id']
-
     edit_title_entry.delete(0, tk.END)
     edit_title_entry.insert(0, entry['titulo'])
     edit_content_text.config(state=tk.NORMAL)
@@ -103,7 +91,6 @@ def on_select(event):
     edit_content_text.insert(tk.END, entry['contenido'])
 
 def update_entry():
-    """Actualiza la entrada seleccionada (endpoint de admin: /admin/modificar/:id)."""
     if not listbox.curselection():
         messagebox.showwarning("Error", "Selecciona una entrada para actualizar.")
         return
@@ -134,7 +121,6 @@ def update_entry():
         messagebox.showerror("Error", f"No se pudo actualizar la entrada.\n{error_details}")
 
 def delete_entry():
-    """Elimina la entrada seleccionada (endpoint de admin: /admin/borrar/:id)."""
     if not listbox.curselection():
         messagebox.showwarning("Error", "Selecciona una entrada para eliminar.")
         return
@@ -159,7 +145,6 @@ def delete_entry():
         messagebox.showerror("Error", f"No se pudo eliminar la entrada.\n{error_details}")
 
 def upload_photo():
-    """Sube una foto al servidor (endpoint de admin: /admin/subir-foto)."""
     file_path = filedialog.askopenfilename(filetypes=[("Imágenes", "*.jpg;*.png;*.jpeg")])
     if not file_path:
         return
