@@ -35,7 +35,7 @@
     let allEntries = [];
     
     function loadEntries(){
-      fetch("https://mi-diario-backend.onrender.com/todas")
+      fetch("https://mi-diario.onrender.com/todas")
         .then(res => res.json())
         .then(data => {
           allEntries = data;

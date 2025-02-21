@@ -21,6 +21,7 @@
     }
     .navigation {
       margin-top: 20px;
+      text-align: center;
     }
     .navigation a {
       margin-right: 10px;
@@ -29,7 +30,6 @@
     }
   </style>
   <script>
-    // Función para obtener parámetros de la URL
     function getParameterByName(name) {
       const url = window.location.href;
       name = name.replace(/[\[\]]/g, '\\$&');
@@ -42,7 +42,7 @@
     window.onload = function(){
       const query = getParameterByName('q');
       document.getElementById('search-term').textContent = query;
-      fetch(`https://mi-diario-backend.onrender.com/buscar?q=${encodeURIComponent(query)}`)
+      fetch(`https://mi-diario.onrender.com/buscar?q=${encodeURIComponent(query)}`)
         .then(response => response.json())
         .then(data => {
           const resultsDiv = document.getElementById('results');

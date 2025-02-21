@@ -17,6 +17,7 @@
     }
     .navigation {
       margin-top: 20px;
+      text-align: center;
     }
     .navigation a {
       text-decoration: none;
@@ -41,7 +42,7 @@
         document.getElementById('content').textContent = "No se especificó ninguna entrada.";
         return;
       }
-      fetch("https://mi-diario-backend.onrender.com/todas")
+      fetch("https://mi-diario.onrender.com/todas")
         .then(res => res.json())
         .then(entries => {
           const index = entries.findIndex(e => e.id == id);
@@ -52,7 +53,6 @@
           const entry = entries[index];
           document.getElementById('entry-title').textContent = entry.titulo;
           document.getElementById('content').textContent = entry.contenido;
-          // Enlaces para navegar entre entradas
           if(index > 0){
             const prevId = entries[index - 1].id;
             document.getElementById('prev-link').href = `entrada.html?id=${prevId}`;
