@@ -12,9 +12,10 @@ ADMIN_KEY = "Grabador5_"
 
 entries_list = []
 selected_id = None
+prev_index = None  # Índice previo en la lista (para preservar cambios no guardados)
 
 def load_entries():
-    global entries_list, selected_id
+    global entries_list, selected_id, prev_index
     try:
         res = requests.get(f"{BASE_URL_PUBLIC}/todas", params={"_": str(time.time())})
     except Exception as e:
@@ -32,9 +33,10 @@ def load_entries():
         return
 
     listbox.delete(0, tk.END)
-    for entry in entries_list:
+    for i, entry in enumerate(entries_list):
         listbox.insert(tk.END, f"[{entry['id']}] {entry['titulo']}")
     selected_id = None
+    prev_index = None
     edit_title_entry.delete(0, tk.END)
     edit_content_text.config(state=tk.NORMAL)
     edit_content_text.delete("1.0", tk.END)
@@ -70,20 +72,32 @@ def add_entry():
         messagebox.showerror("Error", f"No se pudo agregar la entrada.\n{error_details}")
 
 def on_select(event):
-    global selected_id
+    global selected_id, prev_index
     if not listbox.curselection():
         return
-    index = listbox.curselection()[0]
-    entry = entries_list[index]
+    new_index = listbox.curselection()[0]
+    entry = entries_list[new_index]
     
-    # Verificar si ya hay cambios en la sección de edición
-    current_text = edit_content_text.get("1.0", tk.END).strip()
-    if current_text and current_text != entry['contenido']:
-        sobrescribir = messagebox.askyesno("Confirmar", "Hay cambios sin guardar. ¿Deseas sobrescribirlos con la entrada seleccionada?")
-        if not sobrescribir:
-            return
-    
+    # Si ya hay un índice previo, y el contenido en el área de edición difiere del contenido guardado de esa entrada,
+    # se pregunta si desea sobrescribir los cambios.
+    if prev_index is not None:
+        # Obtén el contenido actual en el área de edición
+        current_text = edit_content_text.get("1.0", tk.END).strip()
+        # Si hay cambios y el nuevo índice es diferente al previo
+        if current_text and new_index != prev_index:
+            # Compara el contenido actual con el de la entrada que estaba seleccionada previamente
+            if current_text != entries_list[prev_index]['contenido']:
+                sobrescribir = messagebox.askyesno("Confirmar", "Hay cambios sin guardar. ¿Deseas sobrescribirlos con la entrada seleccionada?")
+                if not sobrescribir:
+                    # Revertir la selección al índice previo
+                    listbox.selection_clear(0, tk.END)
+                    listbox.selection_set(prev_index)
+                    listbox.activate(prev_index)
+                    return
+
+    # Actualiza la selección
     selected_id = entry['id']
+    prev_index = new_index
     edit_title_entry.delete(0, tk.END)
     edit_title_entry.insert(0, entry['titulo'])
     edit_content_text.config(state=tk.NORMAL)
@@ -91,7 +105,7 @@ def on_select(event):
     edit_content_text.insert(tk.END, entry['contenido'])
 
 def update_entry():
-    if not listbox.curselection():
+    if selected_id is None:
         messagebox.showwarning("Error", "Selecciona una entrada para actualizar.")
         return
     new_title = edit_title_entry.get()
@@ -121,7 +135,7 @@ def update_entry():
         messagebox.showerror("Error", f"No se pudo actualizar la entrada.\n{error_details}")
 
 def delete_entry():
-    if not listbox.curselection():
+    if selected_id is None:
         messagebox.showwarning("Error", "Selecciona una entrada para eliminar.")
         return
 
