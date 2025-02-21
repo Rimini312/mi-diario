@@ -4,8 +4,8 @@ from tkinter import messagebox, filedialog
 import time
 
 # Rutas base (ajusta "tu-backend.onrender.com" a tu URL real)
-BASE_URL_PUBLIC = "https://mi-diario.onrender.com"
-BASE_URL_ADMIN  = "https://mi-diario.onrender.com/admin"
+BASE_URL_PUBLIC = "https://mi-diario-backend.onrender.com"
+BASE_URL_ADMIN  = "https://mi-diario-backend.onrender.com/admin"
 
 # Clave de administrador
 ADMIN_KEY = "Grabador5_"
