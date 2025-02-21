@@ -7,8 +7,11 @@ const { Pool } = require("pg");
 
 const app = express();
 const PORT = process.env.PORT || 10000;
-const ADMIN_KEY = process.env.ADMIN_KEY; // Debe estar definido en Render (valor: "Grabador5_")
 
+// Clave de administrador (debe coincidir con la variable en Render)
+const ADMIN_KEY = process.env.ADMIN_KEY;
+
+// Configuración general
 app.use(cors());
 app.use(express.json());
 
@@ -16,25 +19,25 @@ app.use(express.json());
 const storage = multer.diskStorage({
   destination: "uploads/",
   filename: (req, file, cb) => {
-    cb(null, "foto.jpg"); // Siempre se sobrescribe la imagen
+    cb(null, "foto.jpg"); // Siempre se sobrescribe la misma foto
   },
 });
 const upload = multer({ storage });
 
-// Servir archivos estáticos (imágenes) desde la carpeta "uploads"
+// Servir la carpeta "uploads" como estático (para ver la foto)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Ruta de prueba
+// Ruta de prueba para confirmar que el servidor corre
 app.get("/test", (req, res) => {
   res.send("Test OK");
 });
 
-// Conexión a PostgreSQL (Supabase)
-// Asegúrate de tener la variable de entorno SUPABASE_CONNECTION_STRING configurada en Render.
+// Conexión a PostgreSQL (Neon, en tu caso)
+// Asegúrate de tener DATABASE_URL definido en Render, con ?sslmode=require
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL, 
-    ssl: { rejectUnauthorized: false },
-  });
+  connectionString: process.env.DATABASE_URL, 
+  ssl: { rejectUnauthorized: false },
+});
 
 // Rutas públicas
 
@@ -44,6 +47,8 @@ app.get("/entradas", async (req, res) => {
     const result = await pool.query("SELECT * FROM entradas ORDER BY fecha DESC LIMIT 5");
     res.json(result.rows);
   } catch (err) {
+    // Log detallado en los logs de Render
+    console.log("Error en /entradas:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -54,6 +59,7 @@ app.get("/todas", async (req, res) => {
     const result = await pool.query("SELECT * FROM entradas ORDER BY fecha DESC");
     res.json(result.rows);
   } catch (err) {
+    console.log("Error en /todas:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -68,20 +74,18 @@ app.get("/buscar", async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
+    console.log("Error en /buscar:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Middleware para rutas de administración
-// Estas rutas requieren que se envíe la cabecera "x-admin-key" con el valor correcto.
+// Middleware para rutas de administración (requiere x-admin-key)
 app.use("/admin", (req, res, next) => {
   if (req.headers["x-admin-key"] !== ADMIN_KEY) {
     return res.status(403).json({ error: "Acceso denegado" });
   }
   next();
 });
-
-// Rutas de administración
 
 // POST /admin/nueva: Crea una nueva entrada
 app.post("/admin/nueva", async (req, res) => {
@@ -96,6 +100,7 @@ app.post("/admin/nueva", async (req, res) => {
     );
     res.json(result.rows[0]);
   } catch (err) {
+    console.log("Error en /admin/nueva:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -107,6 +112,7 @@ app.delete("/admin/borrar/:id", async (req, res) => {
     await pool.query("DELETE FROM entradas WHERE id = $1", [id]);
     res.json({ mensaje: "Entrada eliminada" });
   } catch (err) {
+    console.log("Error en /admin/borrar:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -122,6 +128,7 @@ app.put("/admin/modificar/:id", async (req, res) => {
     await pool.query("UPDATE entradas SET titulo = $1, contenido = $2 WHERE id = $3", [titulo, contenido, id]);
     res.json({ mensaje: "Entrada modificada" });
   } catch (err) {
+    console.log("Error en /admin/modificar:", err);
     res.status(500).json({ error: err.message });
   }
 });
