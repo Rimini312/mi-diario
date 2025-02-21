@@ -32,9 +32,9 @@ app.get("/test", (req, res) => {
 // Conexión a PostgreSQL (Supabase)
 // Asegúrate de tener la variable de entorno SUPABASE_CONNECTION_STRING configurada en Render.
 const pool = new Pool({
-  connectionString: process.env.SUPABASE_CONNECTION_STRING,
-  ssl: { rejectUnauthorized: false },
-});
+    connectionString: process.env.DATABASE_URL, 
+    ssl: { rejectUnauthorized: false },
+  });
 
 // Rutas públicas
 
