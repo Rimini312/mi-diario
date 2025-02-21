@@ -6,26 +6,23 @@
   <style>
     body {
       font-family: Consolas, "Courier New", monospace;
-      margin-left: 1cm;
-      margin-top: 10px;
+      margin: 1cm;
       background-color: #f5f5f5;
+      text-align: left;
     }
     header {
-      margin-bottom: 10px;
+      margin-bottom: 1cm;
     }
     .logo {
       font-size: 2em;
       font-weight: bold;
-      margin-bottom: 5px;
+      margin-bottom: 0.5cm;
     }
     .latest-entries a {
       display: block;
       color: #333;
       text-decoration: none;
-      margin: 2px 0;
-    }
-    .textos-link {
-      margin: 10px 0;
+      margin-bottom: 0.2cm;
     }
     .textos-link a {
       text-decoration: none;
@@ -33,13 +30,9 @@
       font-size: 1em;
     }
     .featured-image {
-      display: block;
       width: 80%;
       margin-left: 5cm;
-      margin-bottom: 20px;
-    }
-    .search-section {
-      margin-bottom: 20px;
+      margin-bottom: 1cm;
     }
     .search-section input[type="text"] {
       width: 60%;
@@ -49,7 +42,7 @@
     .search-section button {
       padding: 6px 10px;
       font-size: 1em;
-      margin-left: 5px;
+      margin-left: 0.5cm;
       cursor: pointer;
     }
     .contact-button button {
@@ -74,9 +67,7 @@
       margin: 10% auto;
       padding: 20px;
       border-radius: 5px;
-    }
-    .modal-content h2 {
-      margin-top: 0;
+      text-align: left;
     }
     .modal-content input,
     .modal-content textarea {
@@ -94,11 +85,9 @@
 </head>
 <body>
   <header>
-    <!-- Logo "A" -->
     <div class="logo">A</div>
-    <!-- Últimas 5 entradas (se cargarán mediante JavaScript) -->
+    <!-- Últimas 5 entradas se cargarán dinámicamente -->
     <nav class="latest-entries" id="latest-entries-nav"></nav>
-    <!-- Enlace a "Textos" -->
     <div class="textos-link">
       <a href="textos.html">Textos</a>
     </div>
@@ -107,13 +96,11 @@
   <!-- Imagen destacada con URL absoluta al backend -->
   <img class="featured-image" src="https://mi-diario.onrender.com/uploads/foto.jpg" alt="Foto Destacada">
   
-  <!-- Buscador -->
   <div class="search-section">
     <input type="text" id="search-input" placeholder="Buscar palabras clave...">
     <button id="search-button">Buscar</button>
   </div>
   
-  <!-- Botón de contacto -->
   <div class="contact-button">
     <button id="contact-btn">Contacto</button>
   </div>
@@ -129,7 +116,7 @@
         <input type="email" name="_replyto" placeholder="Tu email">
         <label>Mensaje</label>
         <textarea name="message" rows="4" placeholder="Tu mensaje" required></textarea>
-        <!-- Reemplaza TU_SITE_KEY por tu clave de reCAPTCHA -->
+        <!-- Reemplaza TU_SITE_KEY por tu clave real de reCAPTCHA -->
         <div class="g-recaptcha" data-sitekey="TU_SITE_KEY"></div>
         <script src="https://www.google.com/recaptcha/api.js" async defer></script>
         <button type="submit">Enviar</button>
@@ -139,7 +126,7 @@
   </div>
   
   <script>
-    // Cargar las últimas 5 entradas desde el backend
+    // Cargar las últimas 5 entradas
     fetch("https://mi-diario.onrender.com/entradas")
       .then(res => res.json())
       .then(data => {
@@ -149,32 +136,30 @@
           nav.textContent = "No hay entradas recientes.";
         } else {
           data.forEach(entry => {
-            const link = document.createElement("a");
-            link.href = `entrada.html?id=${entry.id}`;
-            link.textContent = entry.titulo;
-            nav.appendChild(link);
+            const a = document.createElement("a");
+            a.href = `entrada.html?id=${entry.id}`;
+            a.textContent = entry.titulo;
+            nav.appendChild(a);
           });
         }
       })
       .catch(err => console.error("Error al cargar entradas:", err));
     
-    // Buscador
-    document.getElementById('search-button').addEventListener('click', function(){
-      const query = document.getElementById('search-input').value.trim();
+    document.getElementById("search-button").addEventListener("click", function(){
+      const query = document.getElementById("search-input").value.trim();
       if(query) {
         window.location.href = `busqueda.html?q=${encodeURIComponent(query)}`;
       }
     });
     
-    // Modal de contacto
-    const contactBtn = document.getElementById('contact-btn');
-    const contactModal = document.getElementById('contact-modal');
-    const closeContact = document.getElementById('close-contact');
-    contactBtn.addEventListener('click', function(){
-      contactModal.style.display = 'block';
+    const contactBtn = document.getElementById("contact-btn");
+    const contactModal = document.getElementById("contact-modal");
+    const closeContact = document.getElementById("close-contact");
+    contactBtn.addEventListener("click", function(){
+      contactModal.style.display = "block";
     });
-    closeContact.addEventListener('click', function(){
-      contactModal.style.display = 'none';
+    closeContact.addEventListener("click", function(){
+      contactModal.style.display = "none";
     });
   </script>
 </body>

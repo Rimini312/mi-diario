@@ -6,29 +6,42 @@
   <style>
     body {
       font-family: Consolas, "Courier New", monospace;
-      margin: 10px;
+      margin: 1cm;
       background-color: #f5f5f5;
+      text-align: left;
     }
     h1 {
-      margin-bottom: 10px;
+      margin-bottom: 1cm;
     }
     ul {
       list-style: none;
       padding: 0;
     }
     li {
-      margin: 5px 0;
+      margin-bottom: 0.5cm;
     }
     .navigation {
-      margin-top: 20px;
-      text-align: center;
+      margin-top: 1cm;
+      text-align: left;
     }
     .navigation a {
-      margin: 0 10px;
       text-decoration: none;
       color: #333;
+      margin-right: 1cm;
     }
   </style>
+</head>
+<body>
+  <h1>Listado de Textos</h1>
+  <ul id="entry-list"></ul>
+  <div class="navigation">
+    <a href="#" id="prev-page" style="display: none;" onclick="prevPage(); return false;">&lt;&lt;</a>
+    Página <span id="current-page">1</span>
+    <a href="#" id="next-page" style="display: none;" onclick="nextPage(); return false;">&gt;&gt;</a>
+  </div>
+  <div class="navigation">
+    <a href="index.html">Portada</a>
+  </div>
   <script>
     let currentPage = 1;
     const pageSize = 25;
@@ -36,12 +49,12 @@
     
     function loadEntries(){
       fetch("https://mi-diario.onrender.com/todas")
-        .then(res => res.json())
-        .then(data => {
-          allEntries = data;
-          displayPage(currentPage);
-        })
-        .catch(err => console.error("Error al cargar entradas:", err));
+         .then(res => res.json())
+         .then(data => {
+            allEntries = data;
+            displayPage(currentPage);
+         })
+         .catch(err => console.error("Error al cargar entradas:", err));
     }
     
     function displayPage(page){
@@ -60,6 +73,8 @@
         });
       }
       document.getElementById("current-page").textContent = page;
+      document.getElementById("prev-page").style.display = (page > 1) ? "inline" : "none";
+      document.getElementById("next-page").style.display = (end < allEntries.length) ? "inline" : "none";
     }
     
     function nextPage(){
@@ -78,17 +93,5 @@
     
     window.onload = loadEntries;
   </script>
-</head>
-<body>
-  <h1>Listado de Textos</h1>
-  <ul id="entry-list"></ul>
-  <div class="navigation">
-    <a href="#" id="prev-page" style="display:none;" onclick="prevPage(); return false;">&lt;&lt;</a>
-    Página <span id="current-page">1</span>
-    <a href="#" id="next-page" style="display:none;" onclick="nextPage(); return false;">&gt;&gt;</a>
-  </div>
-  <div class="navigation">
-    <a href="index.html">Portada</a>
-  </div>
 </body>
 </html>
