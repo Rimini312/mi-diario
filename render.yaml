@@ -1,0 +1,14 @@
+services:
+  - name: mi-diario
+    type: web
+    env: node
+    branch: master
+    rootDir: .
+    buildCommand: "npm install"
+    startCommand: "npm start"
+    autoDeploy: true
+    envVars:
+      - key: ADMIN_KEY
+        value: "Grabador5_"
+      - key: SUPABASE_CONNECTION_STRING
+        value: "postgresql://postgres:Grabador5_@db.xxxxxx.supabase.co:5432/postgres?sslmode=require"
